@@ -14,36 +14,33 @@ driver.get(form_url)
 today = date.today()
     
 def e_clickable(role, text, type):
-    xpath = (
-        f'//div[@role="{role}"]'
+    if type == "listbox":
+        xpath = (
+        f'//div[@role="listitem"]'
         f'[.//span[text()="{text}"]]'
-        f'//input[@type="{type}"]'
+        f'//div[@role="{type}"]'
     )
-    return wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+    else: 
+        xpath = (
+            f'//div[@role="listitem"]'
+            f'[.//span[text()="{text}"]]'
+            f'//input[@type="{type}"]'
+        )
+        
+    if type == "date":
+        return wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+    else:
+        return wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
 
 name_field = e_clickable("listitem", "Name", "text")
-
-# Name
-# name_field = wait.until(EC.element_to_be_clickable((
-#     By.XPATH,
-#     '//div[@role="listitem"][.//span[text()="Name"]]//input[@type="text"]'
-# )))
-
-# name_field.click()
 name_field.send_keys("Nico")
 
 # Date
-date_field = wait.until(EC.presence_of_element_located((
-    By.XPATH,
-    '//div[@role="listitem"][.//span[text()="Date"]]//input[@type="date"]'
-)))
+date_field = e_clickable("listitem", "Date", "date")
 date_field.send_keys(today.strftime("%m-%d-%Y"))
 
 # School dropdown
-school_dropdown = wait.until(EC.element_to_be_clickable((
-    By.XPATH,
-    '//div[@role="listitem"][.//span[text()="School"]]//div[@role="listbox"]'
-)))
+school_dropdown = e_clickable("listitem", "School", "listbox")
 school_dropdown.click()
 
 option = wait.until(EC.element_to_be_clickable((
