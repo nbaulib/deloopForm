@@ -14,19 +14,28 @@ form_url = "https://forms.gle/PPZAe66rHKbqyUpz5"
 driver.get(form_url)
 
 today = date.today()
+
+XPATH_TEMPLATES = {
+    "listbox": (
+        '//div[@role="listitem"]'
+        '[.//span[text()="{label}"]]'
+        '//div[@role="listbox"]'
+    ),
+    "text": (
+        '//div[@role="listitem"]'
+        '[.//span[text()="{label}"]]'
+        '//input[not(@aria-hidden="true")]'
+    ),
+    "option": (
+        '//div[@role="option"]//span[text()="{label}"]'
+    ),
+}
     
 def get_xpath(label, input_type):
-    if input_type == "listbox":
-       return (
-            f'//div[@role="listitem"]'
-            f'[.//span[text()="{label}"]]'
-            f'//div[@role="listbox"]'
-        )
-    return (
-            f'//div[@role="listitem"]'
-            f'[.//span[text()="{label}"]]'
-            f'//input[not(@aria-hidden="true")]'
-        )
+    template = XPATH_TEMPLATES.get(input_type)
+    if not template:
+        raise ValueError(f"Unsupported input type: {input_type}")
+    return template.format(label=label)
         
 def wait_clickable(xpath):
     return wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
