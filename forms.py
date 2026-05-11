@@ -5,6 +5,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from parser import *
+import time
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", handlers=[logging.FileHandler("bot.log"), logging.StreamHandler()])
+log = logging.getLogger(__name__)
 
 FORM_URL = "https://forms.gle/WZoLLTF86axQ99ux5"
 
@@ -59,7 +64,9 @@ def click_button(wait, label):
 # SUMBITING
 
 # submits 1 entry
-def submit_entry(i, email, name, school, entry):
+def submit_entry(i, email, name, school, date, entry):
+    # log.info(f"Entry {i} starting: {entry['workshop']}")
+    start = time.time()
     
     #runs without browser ui
     options = webdriver.ChromeOptions()
@@ -75,7 +82,7 @@ def submit_entry(i, email, name, school, entry):
         fill_text(wait, "Name", name)
         select_dropdown(wait, driver, "School Site", school)
         select_dropdown(wait, driver, "Workshop Name", entry["workshop"])
-        fill_text(wait, "Date", entry["date"])
+        fill_text(wait, "Date", date)
         select_dropdown(wait, driver, "week of the course", entry["week"])
         fill_text(wait, "What did you cover", entry["summary"])
         fill_text(wait, "Any issues", entry["issues"])
@@ -90,9 +97,12 @@ def submit_entry(i, email, name, school, entry):
             EC.element_to_be_clickable((By.LINK_TEXT, "Submit another response"))
         )
         
+        elapsed = time.time() - start
+        log.info(f"{entry['workshop']} done in {elapsed:.1f}s")
         return i, None  # success
     
     except Exception as e:
+        log.error(f"Entry {entry['workshop']} FAILED: {e}", exc_info=True)
         return i, e     # error
     
     finally:
@@ -101,7 +111,7 @@ def submit_entry(i, email, name, school, entry):
 # handles batch
 def submit_batch(raw, say):
     # slack message to vars
-    email, name, school, entries = parse_text(raw)
+    email, name, school, date, entries = parse_text(raw)
 
     total = len(entries)
     
@@ -110,14 +120,15 @@ def submit_batch(raw, say):
     # one thread per entry
     with ThreadPoolExecutor(max_workers=total) as pool:
         futures = {
-            pool.submit(submit_entry, i, email, name, school, entry): i
-            for i, entry in enumerate(entries)
-        }
-        for future in as_completed(futures):
-            i, err = future.result()
-            if err:
-                say(f"Entry {i + 1}/{total} FAILED")
-            else:
-                say(f"Entry {i + 1}/{total} submitted.")
+        pool.submit(submit_entry, i, email, name, school, date, entry): (i, entry)
+        for i, entry in enumerate(entries)
+    }
+    for future in as_completed(futures):
+        i, entry = futures[future]
+        idx, err = future.result()
+        if err:
+            say(f"{entry['workshop']} {i + 1}/{total} FAILED")
+        else:
+            say(f"{entry['workshop']} {i + 1}/{total} submitted.")
 
     say("End.")

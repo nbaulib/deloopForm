@@ -91,16 +91,15 @@ The bot listens for `@deloop` and parses the message into multiple form entries.
 email@example.com
 First LastName
 Cool School
+today
 
 Intro to 3D Modeling
-today
 week 2
 Students used the union and subtract tools in TinkerCAD to design a skatepark.
 none
 none
 
 Intro to Data Science
-05112026
 week 3
 Students used seaborn to visualize NFL data.
 no issues
