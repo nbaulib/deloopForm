@@ -110,6 +110,7 @@ def submit_entry(i, email, name, school, date, entry):
 
 # handles batch
 def submit_batch(raw, say):
+    start = time.time()
     # slack message to vars
     email, name, school, date, entries = parse_text(raw)
 
@@ -132,3 +133,5 @@ def submit_batch(raw, say):
             say(f"{entry['workshop']} {i + 1}/{total} submitted.")
 
     say("End.")
+    elapsed = time.time() - start
+    log.info(f"Finished in {elapsed:.1f}s")
