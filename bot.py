@@ -21,7 +21,7 @@ def handle_mention(event, say):
     if not raw:
         say(
             "You didn't send anything. Format as such:\n"
-            "```\nemail\nname\nschool\n\nworkshop\ndate\nweek\nsummary\nissues\ninventory\n```"
+            "```\nemail\nname\nschool\ndate\n\nworkshop\nweek\nsummary\nissues\ninventory\n```"
         )
         return
 
